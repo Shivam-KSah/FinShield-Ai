@@ -11,6 +11,18 @@
   "engines": {
     "node": ">=18.0.0"
   },
+  "dependencies": {
+    "@google/generative-ai": "^0.24.1",
+    "bcryptjs": "^3.0.3",
+    "cors": "^2.8.6",
+    "dotenv": "^17.4.2",
+    "express": "^5.2.1",
+    "jsonwebtoken": "^9.0.3",
+    "mongoose": "^9.7.1"
+  },
+  "devDependencies": {
+    "nodemon": "^3.1.14"
+  },
   "keywords": ["fintech", "fraud-detection", "express", "mongodb"],
   "author": "FinShield-AI",
   "license": "MIT"
