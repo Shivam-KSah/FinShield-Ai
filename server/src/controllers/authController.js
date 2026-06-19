@@ -65,19 +65,20 @@ const login = async (req, res) => {
       return res.status(401).json({ success: false, message: 'Invalid email or password.' });
     }
 
-    user.lastLoginAt = new Date();
-    await user.save({ validateBeforeSave: false });
+    // Use findByIdAndUpdate to avoid triggering pre-save hook
+    await User.findByIdAndUpdate(user._id, { lastLoginAt: new Date() });
 
     const token = signToken(user._id);
 
-    await createAuditLog({
+    // Non-blocking audit log — don't let it break login
+    createAuditLog({
       actor: user._id,
       actorRole: user.role,
       action: 'USER_LOGIN',
       details: { email },
       ipAddress: req.ip,
       severity: 'info',
-    });
+    }).catch(err => console.error('[Auth] Audit log error:', err.message));
 
     res.status(200).json({
       success: true,
@@ -90,6 +91,7 @@ const login = async (req, res) => {
     res.status(500).json({ success: false, message: 'Server error during login.' });
   }
 };
+
 
 // GET /api/auth/me
 const getMe = async (req, res) => {
