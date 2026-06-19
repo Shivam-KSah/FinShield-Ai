@@ -1,0 +1,17 @@
+{
+  "name": "finshield-server",
+  "version": "1.0.0",
+  "description": "FinShield-AI Backend — Fraud Detection API",
+  "main": "src/server.js",
+  "scripts": {
+    "start": "node src/server.js",
+    "dev": "nodemon src/server.js",
+    "seed": "node src/utils/seed.js"
+  },
+  "engines": {
+    "node": ">=18.0.0"
+  },
+  "keywords": ["fintech", "fraud-detection", "express", "mongodb"],
+  "author": "FinShield-AI",
+  "license": "MIT"
+}
