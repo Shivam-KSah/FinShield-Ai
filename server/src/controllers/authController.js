@@ -25,14 +25,15 @@ const register = async (req, res) => {
     const user = await User.create({ name, email, password, role: userRole });
     const token = signToken(user._id);
 
-    await createAuditLog({
+    // Non-blocking audit log — don't let it break registration
+    createAuditLog({
       actor: user._id,
       actorRole: user.role,
       action: 'USER_REGISTERED',
       details: { email, role: userRole },
       ipAddress: req.ip,
       severity: 'info',
-    });
+    }).catch(err => console.error('[Auth] Audit log error (register):', err.message));
 
     res.status(201).json({
       success: true,
@@ -41,10 +42,12 @@ const register = async (req, res) => {
       user: user.toSafeObject(),
     });
   } catch (err) {
-    console.error('[Auth] Register error:', err.message);
-    res.status(500).json({ success: false, message: 'Server error during registration.' });
+    console.error('[Auth] Register error:', err.message, err.code);
+    res.status(500).json({ success: false, message: `Registration failed: ${err.message}` });
   }
+
 };
+
 
 // POST /api/auth/login
 const login = async (req, res) => {
