@@ -9,9 +9,24 @@ const app = express();
 
 // Middleware
 app.use(cors({
-  origin: [process.env.CLIENT_URL || 'http://localhost:5173', 'https://finshield-ai.vercel.app'],
+  origin: function(origin, callback) {
+    const allowed = [
+      'http://localhost:5173',
+      'http://localhost:3000',
+      'https://fin-shield-ai.vercel.app',
+      'https://finshield-ai.vercel.app',
+      process.env.CLIENT_URL,
+    ].filter(Boolean);
+    // Allow requests with no origin (mobile apps, Postman, curl)
+    if (!origin || allowed.includes(origin) || origin.endsWith('.vercel.app')) {
+      callback(null, true);
+    } else {
+      callback(new Error(`CORS: origin ${origin} not allowed`));
+    }
+  },
   credentials: true,
 }));
+
 app.use(express.json({ limit: '10kb' }));
 app.use(express.urlencoded({ extended: true }));
 
