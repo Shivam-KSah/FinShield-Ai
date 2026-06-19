@@ -55,16 +55,17 @@ const userSchema = new mongoose.Schema(
 );
 
 // Auto-generate account number before save
-userSchema.pre('save', async function (next) {
-  if (this.isNew) {
-    this.accountNumber = 'FIN' + Date.now().toString().slice(-8) + Math.floor(Math.random() * 100);
+userSchema.pre('save', async function () {
+  if (this.isNew && !this.accountNumber) {
+    this.accountNumber = 'FIN' + Date.now().toString().slice(-9) + Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   }
   if (this.isModified('password')) {
     const salt = await bcrypt.genSalt(12);
     this.password = await bcrypt.hash(this.password, salt);
   }
-  next();
 });
+
+
 
 userSchema.methods.comparePassword = async function (candidatePassword) {
   return bcrypt.compare(candidatePassword, this.password);
