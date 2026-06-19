@@ -78,7 +78,7 @@ export default function Register() {
                 <input
                   id="reg-name" className="form-input"
                   type="text" name="name"
-                  placeholder="Shivam Kumar"
+                  placeholder="John Smith"
                   value={form.name} onChange={handleChange}
                   required minLength={2}
                 />
