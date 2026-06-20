@@ -22,7 +22,7 @@ const CustomTooltip = ({ active, payload, label }) => {
         padding: '10px 14px',
         fontSize: '0.8rem',
         color: 'var(--text-secondary)',
-        boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+        boxShadow: '0 4px 16px rgba(0,0,0,0.10)',
       }}>
         <div style={{ color: 'var(--text-primary)', fontWeight: 600, marginBottom: 4 }}>{label}</div>
         {payload.map((p) => (
@@ -40,7 +40,7 @@ export function TransactionVolumeChart({ data = [] }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <LineChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
+        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
         <XAxis dataKey="_id" tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
         <YAxis tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
         <Tooltip content={<CustomTooltip />} />
@@ -101,11 +101,11 @@ export function AmountBarChart({ data = [] }) {
   return (
     <ResponsiveContainer width="100%" height={220}>
       <BarChart data={data} margin={{ top: 5, right: 10, left: -20, bottom: 5 }}>
-        <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.04)" />
-        <XAxis dataKey="_id" tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
-        <YAxis tick={{ fill: '#475569', fontSize: 11 }} axisLine={false} tickLine={false} />
+        <CartesianGrid strokeDasharray="3 3" stroke="#F1F5F9" />
+        <XAxis dataKey="_id" tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={false} tickLine={false} />
+        <YAxis tick={{ fill: '#94A3B8', fontSize: 11 }} axisLine={false} tickLine={false} />
         <Tooltip content={<CustomTooltip />} />
-        <Bar dataKey="amount" name="Volume (₹)" fill={COLORS.cyan} radius={[4, 4, 0, 0]} />
+        <Bar dataKey="amount" name="Volume (₹)" fill={COLORS.blue} radius={[4, 4, 0, 0]} />
       </BarChart>
     </ResponsiveContainer>
   );
