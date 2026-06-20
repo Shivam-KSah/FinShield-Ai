@@ -1,6 +1,7 @@
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const { createAuditLog } = require('../utils/auditLogger');
+const { sendWelcomeEmail } = require('../services/emailService');
 
 const signToken = (id) =>
   jwt.sign({ id }, process.env.JWT_SECRET, { expiresIn: process.env.JWT_EXPIRES_IN || '7d' });
@@ -25,7 +26,7 @@ const register = async (req, res) => {
     const user = await User.create({ name, email, password, role: userRole });
     const token = signToken(user._id);
 
-    // Non-blocking audit log — don't let it break registration
+    // Non-blocking audit log + welcome email
     createAuditLog({
       actor: user._id,
       actorRole: user.role,
@@ -34,6 +35,9 @@ const register = async (req, res) => {
       ipAddress: req.ip,
       severity: 'info',
     }).catch(err => console.error('[Auth] Audit log error (register):', err.message));
+
+    sendWelcomeEmail({ to: email, name, role: userRole })
+      .catch(err => console.error('[Email] Welcome email error:', err.message));
 
     res.status(201).json({
       success: true,

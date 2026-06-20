@@ -3,6 +3,7 @@ const User = require('../models/User');
 const { calculateRisk } = require('../services/fraudEngine');
 const { generateFraudReport } = require('../services/geminiService');
 const { createAuditLog } = require('../utils/auditLogger');
+const { sendFlaggedAlert, sendBlockedAlert, sendApprovedAlert, sendFinalBlockAlert } = require('../services/emailService');
 
 // POST /api/transactions/transfer
 const transfer = async (req, res) => {
@@ -72,7 +73,7 @@ const transfer = async (req, res) => {
         ? 'TRANSACTION_FLAGGED'
         : 'TRANSACTION_INITIATED';
 
-    await createAuditLog({
+    createAuditLog({
       actor: sender._id,
       actorRole: sender.role,
       action: auditAction,
@@ -80,7 +81,28 @@ const transfer = async (req, res) => {
       details: { amount, riskScore, status, receiverEmail },
       ipAddress: req.ip,
       severity: status === 'blocked' ? 'critical' : status === 'flagged' ? 'warning' : 'info',
-    });
+    }).catch(err => console.error('[AuditLog] Error:', err.message));
+
+    // Send email alert to sender (non-blocking)
+    if (status === 'flagged') {
+      sendFlaggedAlert({
+        to: sender.email,
+        name: sender.name,
+        amount,
+        riskScore,
+        description: description || 'Transfer',
+        transactionId: transaction._id,
+      }).catch(err => console.error('[Email] Flagged alert error:', err.message));
+    } else if (status === 'blocked') {
+      sendBlockedAlert({
+        to: sender.email,
+        name: sender.name,
+        amount,
+        riskScore,
+        description: description || 'Transfer',
+        transactionId: transaction._id,
+      }).catch(err => console.error('[Email] Blocked alert error:', err.message));
+    }
 
     const populated = await Transaction.findById(transaction._id)
       .populate('sender', 'name email accountNumber')
@@ -190,7 +212,7 @@ const reviewTransaction = async (req, res) => {
     transaction.reviewNote = note || null;
     await transaction.save();
 
-    await createAuditLog({
+    createAuditLog({
       actor: req.user._id,
       actorRole: req.user.role,
       action: 'TRANSACTION_REVIEWED',
@@ -198,7 +220,31 @@ const reviewTransaction = async (req, res) => {
       details: { action, newStatus, note },
       ipAddress: req.ip,
       severity: action === 'block' ? 'critical' : 'warning',
-    });
+    }).catch(err => console.error('[AuditLog] Error:', err.message));
+
+    // Email alert to the original sender
+    const senderUser = await User.findById(transaction.sender);
+    if (senderUser) {
+      if (action === 'approve') {
+        sendApprovedAlert({
+          to: senderUser.email,
+          name: senderUser.name,
+          amount: transaction.amount,
+          description: transaction.description,
+          transactionId: transaction._id,
+          reviewNote: note,
+        }).catch(err => console.error('[Email] Approved alert error:', err.message));
+      } else {
+        sendFinalBlockAlert({
+          to: senderUser.email,
+          name: senderUser.name,
+          amount: transaction.amount,
+          description: transaction.description,
+          transactionId: transaction._id,
+          reviewNote: note,
+        }).catch(err => console.error('[Email] Block alert error:', err.message));
+      }
+    }
 
     const populated = await Transaction.findById(transaction._id)
       .populate('sender', 'name email accountNumber')
